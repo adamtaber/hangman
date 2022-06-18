@@ -1,0 +1,28 @@
+---
+computer_word:
+- r
+- e
+- s
+- p
+- o
+- n
+- d
+- i
+- n
+- g
+player_guess: '1'
+incorrect_letters: 'incorrect letters: a, '
+correct_letters:
+- '_ '
+- 'e '
+- '_ '
+- '_ '
+- 'o '
+- '_ '
+- '_ '
+- 'i '
+- '_ '
+- '_ '
+player_penalty_points: 1
+game_over: false
+turn_number: 5

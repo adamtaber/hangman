@@ -52,6 +52,7 @@ class Hangman
       end
       puts "type the number of the save file you would like to load"
       number = gets.chomp.to_i
+
       yaml = YAML.load_file("save_files/#{files[number]}")
 
       File.open("save_files/#{files[number]}", 'r') do |file|
@@ -60,21 +61,28 @@ class Hangman
     end
   end
 
+  def save_game
+    yaml_hash = {"computer_word" => @computer_word, "player_guess" => @player_guess,
+      "incorrect_letters" => @incorrect_letters, "correct_letters" => @correct_letters,
+      "player_penalty_points" => @player_penalty_points, "game_over" => @game_over, 
+      "turn_number" => @turn_number}
+    Dir.mkdir('save_files') unless Dir.exists?('save_files')
+    puts "type name"
+    file_name = gets.chomp
+    File.open("save_files/#{file_name}.yaml", "w") do |file|
+        file.puts YAML.dump(yaml_hash)
+    end
+    puts "Your game has been saved, thank you playing"
+    game_over = true
+  end
+
   def get_player_guess
     puts "\n"
     puts "Please enter a letter or the full word you think you've solved it"
     puts "If you would like to save your game, type '1' and press enter"
     @player_guess = gets.chomp.downcase
     if @player_guess == '1'
-      Dir.mkdir('save_files') unless Dir.exists?('save_files')
-      end
-      puts "type name"
-      file_name = gets.chomp
-      File.open("save_files/#{file_name}.yaml", "w") do |file|
-        YAML.dump([] << self, file)
-      end
-      puts "Your game has been saved, thank you playing"
-      game_over = true
+      save_game
     elsif @player_guess.gsub(/[^a-z]/i, '').length != @player_guess.length
       puts "\n"
       puts "That input is not valid \n"
@@ -83,6 +91,12 @@ class Hangman
   end
 
   def draw_hangman
+    yaml_hash = {"computer_word" => @computer_word, "player_guess" => @player_guess,
+    "incorrect_letters" => @incorrect_letters, "correct_letters" => @correct_letters,
+    "player_penalty_points" => @player_penalty_points, "game_over" => @game_over, 
+    "turn_number" => @turn_number}
+    puts YAML.dump(yaml_hash)
+
     if @player_penalty_points == 0
       puts "____________"
       puts "|"
