@@ -11,6 +11,7 @@ class Hangman
     @game_over = false
     @turn_number = 0
     @save = ''
+    @save_game = false
   end
 
   def create_dictionary
@@ -43,20 +44,38 @@ class Hangman
     @incorrect_letters = "incorrect letters: "
   end
 
+  def load_file
+    files = Dir.entries('save_files')
+    files.each_index do |index|
+      puts "#{index}: #{files[index]}"
+    end
+    puts "type the number of the save file you would like to load"
+    number = gets.chomp.to_i
+    File.open("save_files/#{files[number]}", 'r') do |file|
+      save = YAML.load(file)
+      @computer_word = save["computer_word"]
+      @player_guess = save["player_guess"]
+      @incorrect_letters = save["incorrect_letters"]
+      @correct_letters = save["correct_letters"]
+      @player_penalty_points = save["player_penalty_points"]
+      @game_over = save["game_over"]
+      @turn_number = save["turn_number"]
+    end
+    draw_hangman
+    play_game
+  end
+
   def generate_intro
     puts "Welcome to Hangman!"
     if Dir.exists?('save_files')
-      files = Dir.entries('save_files')
-      files.each_index do |index|
-        puts "#{index}: #{files[index]}"
-      end
-      puts "type the number of the save file you would like to load"
-      number = gets.chomp.to_i
-
-      yaml = YAML.load_file("save_files/#{files[number]}")
-
-      File.open("save_files/#{files[number]}", 'r') do |file|
-        file
+      puts "Would you like to load a previous game? (y/n)"
+      load_game = gets.chomp.downcase
+      if load_game == "y"
+        load_file
+      elsif load_game == "n"
+        play_game
+      else
+        generate_intro
       end
     end
   end
@@ -66,14 +85,19 @@ class Hangman
       "incorrect_letters" => @incorrect_letters, "correct_letters" => @correct_letters,
       "player_penalty_points" => @player_penalty_points, "game_over" => @game_over, 
       "turn_number" => @turn_number}
-    Dir.mkdir('save_files') unless Dir.exists?('save_files')
-    puts "type name"
+    if Dir.exists?('save_files') == false
+      Dir.mkdir('save_files')
+    end
+    puts "\n"
+    puts "Please type your name"
     file_name = gets.chomp
     File.open("save_files/#{file_name}.yaml", "w") do |file|
         file.puts YAML.dump(yaml_hash)
     end
+    puts "\n"
     puts "Your game has been saved, thank you playing"
-    game_over = true
+    @game_over = true
+    @save_game = true
   end
 
   def get_player_guess
@@ -87,16 +111,20 @@ class Hangman
       puts "\n"
       puts "That input is not valid \n"
       get_player_guess
+    elsif @incorrect_letters.include?("#{@player_guess}, ")
+      puts "\n"
+      puts "You have already tried that letter"
+      puts "\n"
+      get_player_guess
+    elsif @correct_letters.include?("#{@player_guess} ")
+      puts "\n"
+      puts "You have already tried that letter"
+      puts "\n"
+      get_player_guess
     end
   end
 
   def draw_hangman
-    yaml_hash = {"computer_word" => @computer_word, "player_guess" => @player_guess,
-    "incorrect_letters" => @incorrect_letters, "correct_letters" => @correct_letters,
-    "player_penalty_points" => @player_penalty_points, "game_over" => @game_over, 
-    "turn_number" => @turn_number}
-    puts YAML.dump(yaml_hash)
-
     if @player_penalty_points == 0
       puts "____________"
       puts "|"
@@ -242,7 +270,8 @@ class Hangman
   end
 
   def checks_letter_or_word
-    if @player_guess.length == 1
+    if @save_game == true
+    elsif @player_guess.length == 1
       player_letter_correct?
     else
       player_word_correct?
@@ -250,7 +279,8 @@ class Hangman
   end
 
   def game_over?
-    if @game_over == false
+    if @save_game == true
+    elsif @game_over == false
       play_game
     elsif @game_over == true
       play_again?
@@ -264,8 +294,10 @@ class Hangman
       @turn_number = 0
       @player_penalty_points = 0
       play_game
+    elsif play_again == "n"
+      puts "Thank you for playing! Goodbye"
     else
-      puts "Thank you playing! Goodbye"
+      play_again?
     end
   end
 
@@ -292,7 +324,6 @@ end
 new_game = Hangman.new
 
 new_game.generate_intro
-new_game.play_game
 
 #creating a save file
 #press 1 to save game
